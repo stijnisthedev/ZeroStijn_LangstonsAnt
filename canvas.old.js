@@ -16,7 +16,7 @@ var steps = 0;
 function setup() {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
-    label = document.getElementById("labelt");
+    label = document.getElementById("label");
 
     generateGrid();
 

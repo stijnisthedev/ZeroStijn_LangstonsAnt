@@ -1,124 +1,75 @@
-var canvas;
-var ctx;
-var label;
+class Ant {
+    constructor(initialX, initialY, initialD, color) {
+        this.x = initialX;
+        this.y = initialY;
+        //0 Up 1 Right 2 Down 3 Left
+        this.direction = initialD;
+        this.color = color;
+    }
+    move(canvas) {
+        let currentWhite = canvas.grid[this.y][this.x] === 0;
 
-var grid = [];
-var gridSpace = 5;
-var xA = 240;
-var yA = 160;
+        canvas.grid[this.y][this.x] = currentWhite ? 1 : 0;
 
-var antX = 120;
-var antY = 80;
-var antD = 3;
+        this.direction = currentWhite ? (this.direction + 1 < 4 ? this.direction + 1 : 0) : (this.direction - 1 < 0 ? 3 : this.direction - 1);
 
-var steps = 0;
+        this.y = this.direction === 0 ? (this.y - 1 < 0 ? canvas.gridHeight - 1 : this.y - 1) : this.y;
+        this.x = this.direction === 1 ? (this.x + 2 > canvas.gridWidth ? 0 : this.x + 1) : this.x;
+        this.y = this.direction === 2 ? (this.y + 2 > canvas.gridHeight ?  0 : this.y + 1) : this.y;
+        this.x = this.direction === 3 ? (this.x - 1 < 0 ? canvas.gridWidth - 1 : this.x - 1) : this.x;
 
-function setup() {
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    label = document.getElementById("labelt");
-
-    generateGrid();
-
-    window.requestAnimationFrame(loop);
-}
-
-function start() {
-    setInterval(moveAnt, 1);
-}
-
-function move(steps) {
-    for(var i = 0; i < steps; i++) {
-        moveAnt();
+        canvas.steps++;
+        document.getElementById("label").innerHTML = "Steps: " + canvas.steps;
+    }
+    draw(canvas) {
+        canvas.ctx.fillStyle = this.color;
+        canvas.ctx.fillRect(this.x * canvas.gridSpace, this.y * canvas.gridSpace, canvas.gridSpace, canvas.gridSpace);
     }
 }
 
-function loop() {
-    draw();
-    window.requestAnimationFrame(loop);
-}
+class Canvas {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = this.canvas.getContext("2d");
+        this.steps = 0;
 
-function draw() {
-    drawGrid();
-    drawAnt();
-}
+        this.grid = [];
+        this.gridSpace = 5;
+        this.gridWidth = 240;
+        this.gridHeight = 160;
 
-function moveAnt() {
-
-    //0 UP 1 RIGHT 2 DOWN 3 LEFT
-    var white = grid[antY][antX] == 0;
-    grid[antY][antX] = white ? 1 : 0;
-
-    if(white) {
-        antD = antD + 1 < 4 ? antD + 1 : 0;
-    } else {
-        antD = antD - 1 < 0 ? 3 : antD - 1;
+        this.ant = new Ant(120, 80, 3, "#ff00ff");
     }
-
-    //MOVE
-    var nextX = antX;
-    var nextY = antY;
-
-    if(antD == 0) {
-        if(nextY - 1 < 0) {
-            nextY = yA;
-        }
-        nextY--;
-    }
-    if(antD == 1) {
-        if(nextX + 2 > xA) {
-            nextX = -1;
-        }
-        nextX++;
-    }
-    if(antD == 2) {
-        if(nextY + 2 > yA) {
-            nextY = -1;
-        }
-        nextY++;
-    }
-    if(antD == 3) {
-        if(nextX - 1 < 0) {
-            nextX = xA;
-        }
-        nextX--;
-    }
-
-    antX = nextX;
-    antY = nextY;
-    steps++;
-    label.innerHTML = "Steps: " + steps;
-}
-
-function generateGrid() {
-    for(var y = 0; y < yA; y++) {
-        grid.push([]);
-        for(var x = 0; x < xA; x++) {
-            grid[y][x] = 0;
-        }
-    }
-}
-
-function drawGrid() {
-    for(var y = 0; y < yA; y++) {
-        for(var x = 0; x < xA; x++) {
-            if(grid[y][x] == 0) {
-                ctx.fillStyle = '#ffffff'
-            } else {
-                ctx.fillStyle = '#000000'
+    setup() {
+        for(let y = 0; y < this.gridHeight; y++) {
+            this.grid.push([]);
+            for(let x = 0; x < this.gridWidth; x++) {
+                this.grid[y][x] = 0;
             }
-
-            ctx.fillRect(x * gridSpace, y * gridSpace, gridSpace, gridSpace);
         }
+
+        setInterval(() => this.ant.move(this), 20);
+        window.requestAnimationFrame(this.loop.bind(this));
+    }
+    loop() {
+        this.draw();
+
+        window.requestAnimationFrame(this.loop.bind(this));
+    }
+    draw() {
+        for(let y = 0; y < this.gridHeight; y++) {
+            for(let x = 0; x < this.gridWidth; x++) {
+                this.ctx.fillStyle = this.grid[y][x] === 0 ? "#ffffff" : "#000000";
+                this.ctx.fillRect(x * this.gridSpace, y * this.gridSpace, this.gridSpace, this.gridSpace);
+            }
+        }
+
+        this.ant.draw(this);
     }
 }
 
-function drawAnt() {
-    ctx.fillStyle = '#ff00ff';
-    ctx.fillRect(antX * gridSpace, antY * gridSpace, gridSpace, gridSpace);
-}
-
-document.addEventListener("DOMContentLoaded", function(event) {
-  setup();
-  start();
+document.addEventListener("DOMContentLoaded", function() {
+    let canvas = new Canvas(document.getElementById("canvas"));
+    canvas.setup();
+    canvas.draw();
 });
